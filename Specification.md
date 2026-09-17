@@ -16,3 +16,5 @@ C:\Project\Example.cs:12:5-15:9
 - Both endpoints are always included, even for single-line selections.
 
 For example, `12:5-12:10` selects columns 5 through 9 on line 12.
+
+The copied text must include a note specifying that columns count UTF-16 code units so that the text location is unambiguous.
