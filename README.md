@@ -17,7 +17,47 @@ Selected text is copied directly from the editor, preserving whitespace, tabs, l
 
 The command is shown for nonempty selections in local files and remote files (SSH, WSL, or containers). Remote paths use the extension host's operating system. Untitled and virtual documents are excluded because they do not have a usable file path; invoking the command directly explains the problem without changing the clipboard.
 
-## Run on Windows
+## Install into VS Code
+
+Follow these steps to install the extension for everyday use on Windows, macOS, or Linux. A `.vsix` file is the extension's installable package. If you already have one, skip to step 5.
+
+1. **Install the prerequisites.** You need [Visual Studio Code](https://code.visualstudio.com/) 1.85 or newer and [Node.js](https://nodejs.org/) 22 or newer with npm. Node.js/npm are needed to create the package; the [VS Code packaging tool requires Node.js 22 or newer](https://github.com/microsoft/vscode-vsce#requirements). Restart VS Code after installing Node.js so its terminal can find it.
+
+2. **Get the extension's source files.** Download this [repository](https://github.com/kvu787/CopyTextLocation_VisualStudioCode) using **Code > Download ZIP** and extract it, or use an existing Git clone.
+
+3. **Open the repository folder in VS Code.** Choose **File > Open Folder...** and select the folder containing `package.json`, `README.md`, and `Source`. Then choose **Terminal > New Terminal**. Run the following to confirm Node.js is available:
+
+   ```text
+   node --version
+   ```
+
+   The result should be `v22.x.x` or newer. Run the next command in this same folder, where `package.json` is located.
+
+4. **Create the installable package.** Run:
+
+   ```text
+   npx --yes @vscode/vsce package --no-dependencies
+   ```
+
+   This downloads the packaging tool as needed, runs the extension's build automatically, and creates `copytextlocation-0.1.0.vsix` in the repository folder. The version in the filename follows `package.json`. Wait for the command to finish successfully before continuing. Internet access is needed to download the packaging tool; no separate `npm install` or `Run.cmd` step is required.
+
+   On Windows, if PowerShell reports that `npx.ps1` cannot run because scripts are disabled, use this equivalent command:
+
+   ```powershell
+   npx.cmd --yes @vscode/vsce package --no-dependencies
+   ```
+
+5. **Install the package in your usual VS Code window.** Press **Ctrl+Shift+P** on Windows/Linux or **Cmd+Shift+P** on macOS to open the Command Palette. Run **Extensions: Install from VSIX...**, select the `.vsix` file created in step 4 (or the one you already have), and complete the installation. If VS Code asks you to reload, do so. This is VS Code's [standard VSIX installation process](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#install-from-a-vsix).
+
+6. **Confirm that it is installed.** Open the Extensions view and search for `@installed Copy Text and Location`. The extension should appear and be enabled.
+
+7. **Try it.** Open a file saved on disk, select some text, right-click the selection, and choose **Copy text and location**. Paste into another editor to check that the file path, range, coordinate note, and selected text are present. The command is only available with a nonempty selection in a supported file; save a new untitled file before trying it.
+
+To install an updated copy, repeat the packaging and installation steps with the updated source files.
+
+## Try in a development window on Windows
+
+`Run.cmd` opens a separate, isolated development window. It does not install the extension into your usual VS Code profile; use the installation steps above for that.
 
 Install VS Code 1.85 or newer, then double-click **Run.cmd**. It builds a distributable extension folder, runs the unit tests, and opens an isolated Extension Development Host with this extension enabled. Select text in the specification that opens and use the right-click command. No separate Node.js installation or dependency download is needed.
 
@@ -31,10 +71,10 @@ Each launch writes its build output, test output, and VS Code logs under `MyLogO
 
 `-Test` runs the tests inside the installed VS Code as well as the unit tests. It temporarily uses the system clipboard and restores its previous plain-text contents. Avoid copying other text during this test. Results are saved as `IntegrationResults.json` in the session folder.
 
-## Development and installation
+## Development
 
 The extension is plain JavaScript with no runtime or development dependencies. With Node.js 20 or newer, run `node Scripts/Build.js` to build and `node --test Tests/Extension.test.js` to run unit tests on any operating system. The build is placed in `Build/CopyTextLocation/`.
 
-To run on macOS or Linux, launch `code --extensionDevelopmentPath="$PWD/Build/CopyTextLocation"` after building. To create an installable package, run `npx @vscode/vsce package --no-dependencies` from the repository root (requires Node.js/npm and downloads the packaging tool), then use **Extensions: Install from VSIX...** in VS Code. The package excludes conversations, tests, scripts, and session logs.
+To run in a development window on macOS or Linux, launch `code --extensionDevelopmentPath="$PWD/Build/CopyTextLocation"` after building. To install into your usual VS Code profile, follow [Install into VS Code](#install-into-vs-code) above. The package excludes conversations, tests, scripts, and session logs.
 
 The tests cover exact clipboard output, both endpoints, native paths, whitespace, Unicode, empty selections, unsupported documents, and clipboard failures. The VS Code integration checks exercise actual selections, clipboard writes, activation, and unsaved edits.
