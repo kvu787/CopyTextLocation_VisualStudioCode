@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 
-async function copyTextAndLocation() {
+async function copySelection(includeText) {
+    const description = includeText ? 'text and location' : 'location';
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
         void vscode.window.showWarningMessage('Open a file and select text to copy.');
@@ -9,7 +10,7 @@ async function copyTextAndLocation() {
 
     const { document, selection } = editor;
     if (document.isUntitled || !['file', 'vscode-remote'].includes(document.uri.scheme)) {
-        void vscode.window.showWarningMessage('Open or save a file on disk before copying its text and location.');
+        void vscode.window.showWarningMessage(`Open or save a file on disk before copying its ${description}.`);
         return;
     }
 
@@ -26,20 +27,26 @@ async function copyTextAndLocation() {
     const note = 'Lines and columns are 1-based; columns count UTF-16 code units '
         + '(a tab counts as one unit). Start inclusive, end exclusive.';
     // Keep the selected text last, with no escaping, indentation, or added suffix.
-    const clipboardText = `${location}\n${note}\n\n${document.getText(selection)}`;
+    const clipboardText = `${location}\n${note}`
+        + (includeText ? `\n\n${document.getText(selection)}` : '');
 
     try {
         await vscode.env.clipboard.writeText(clipboardText);
     } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
-        void vscode.window.showErrorMessage(`Could not copy text and location: ${reason}`);
+        void vscode.window.showErrorMessage(`Could not copy ${description}: ${reason}`);
     }
 }
 
 function activate(context) {
-    context.subscriptions.push(vscode.commands.registerCommand(
-        'copyTextLocation.copyTextAndLocation', copyTextAndLocation
-    ));
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'copyTextLocation.copyTextAndLocation', () => copySelection(true)
+        ),
+        vscode.commands.registerCommand(
+            'copyTextLocation.copyLocation', () => copySelection(false)
+        )
+    );
 }
 
 module.exports = { activate };

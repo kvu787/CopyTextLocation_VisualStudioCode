@@ -1,8 +1,8 @@
 # Copy Text and Location
 
-Select text in a file, right-click the selection, and choose **Copy text and location**. The same command is available in the Command Palette.
+Select text in a file, right-click the selection, and choose **Copy text and location** or **Copy location**. Both commands are also available in the Command Palette.
 
-The clipboard contains the absolute file path and range, a note defining the coordinates, a blank line, and the exact selected text:
+**Copy text and location** puts the absolute file path and range, a note defining the coordinates, a blank line, and the exact selected text on the clipboard:
 
 ```text
 C:\Project\Example.cs:12:5-12:10
@@ -11,11 +11,18 @@ Lines and columns are 1-based; columns count UTF-16 code units (a tab counts as 
 Hello
 ```
 
+**Copy location** includes the same path, range, and coordinate note, without the blank line or selected text:
+
+```text
+C:\Project\Example.cs:12:5-12:10
+Lines and columns are 1-based; columns count UTF-16 code units (a tab counts as one unit). Start inclusive, end exclusive.
+```
+
 Both endpoints are always included. Paths use the operating system's native separators. Coordinates use [VS Code's UTF-16 position model](https://code.visualstudio.com/api/references/vscode-api#Position): an emoji outside the basic multilingual plane takes two column units, and a tab takes one.
 
 Selected text is copied directly from the editor, preserving whitespace, tabs, line endings, and unsaved edits. Nothing is appended after it. Metadata lines use LF line endings. Selections made backwards produce the same ordered range as forward selections. With multiple selections, the primary selection is copied. Its range describes the current editor contents, which may differ from the saved file.
 
-The command is shown for nonempty selections in local files and remote files (SSH, WSL, or containers). Remote paths use the extension host's operating system. Untitled and virtual documents are excluded because they do not have a usable file path; invoking the command directly explains the problem without changing the clipboard.
+Both commands use the primary selection and are shown for nonempty selections in local files and remote files (SSH, WSL, or containers). Remote paths use the extension host's operating system. Untitled and virtual documents are excluded because they do not have a usable file path; invoking either command directly explains the problem without changing the clipboard.
 
 ## Install into VS Code
 
@@ -51,7 +58,7 @@ Follow these steps to install the extension for everyday use on Windows, macOS, 
 
 6. **Confirm that it is installed.** Open the Extensions view and search for `@installed Copy Text and Location`. The extension should appear and be enabled.
 
-7. **Try it.** Open a file saved on disk, select some text, right-click the selection, and choose **Copy text and location**. Paste into another editor to check that the file path, range, coordinate note, and selected text are present. The command is only available with a nonempty selection in a supported file; save a new untitled file before trying it.
+7. **Try it.** Open a file saved on disk, select some text, right-click the selection, and choose **Copy text and location**. Paste into another editor to check that the file path, range, coordinate note, and selected text are present. Repeat with **Copy location** to copy just the file path, range, and coordinate note. Both commands require a nonempty selection in a supported file; save a new untitled file before trying them.
 
 To install an updated copy, repeat the packaging and installation steps with the updated source files.
 
@@ -59,7 +66,7 @@ To install an updated copy, repeat the packaging and installation steps with the
 
 `Run.cmd` opens a separate, isolated development window. It does not install the extension into your usual VS Code profile; use the installation steps above for that.
 
-Install VS Code 1.85 or newer, then double-click **Run.cmd**. It builds a distributable extension folder, runs the unit tests, and opens an isolated Extension Development Host with this extension enabled. Select text in the specification that opens and use the right-click command. No separate Node.js installation or dependency download is needed.
+Install VS Code 1.85 or newer, then double-click **Run.cmd**. It builds a distributable extension folder, runs the unit tests, and opens an isolated Extension Development Host with this extension enabled. Select text in the specification that opens and use either right-click command. No separate Node.js installation or dependency download is needed.
 
 Each launch writes its build output, test output, and VS Code logs under `MyLogOutput/yyyy-MM-dd_HH-mm-ss/`. The isolated profile and extension directory are also kept there. `MyLogOutput/` and `Build/` are ignored by Git. The extension does not log copied text.
 

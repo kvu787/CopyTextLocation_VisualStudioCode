@@ -7,19 +7,36 @@ async function run() {
     const output = process.env.COPY_TEXT_LOCATION_TEST_OUTPUT;
     assert.ok(output, 'Run integration tests with Run.ps1 -Test.');
     const resultPath = path.join(output, 'IntegrationResults.json');
-    const command = 'copyTextLocation.copyTextAndLocation';
+    // Exercise automatic activation through the newly added command first.
+    const commands = ['copyTextLocation.copyLocation', 'copyTextLocation.copyTextAndLocation'];
     const note = 'Lines and columns are 1-based; columns count UTF-16 code units '
         + '(a tab counts as one unit). Start inclusive, end exclusive.';
     let originalClipboard;
     let count = 0;
 
+    async function verifyClipboard(editor, range, selectedText) {
+        for (const command of commands) {
+            await vscode.commands.executeCommand(command);
+            const suffix = command === 'copyTextLocation.copyTextAndLocation' ? `\n\n${selectedText}` : '';
+            assert.equal(await vscode.env.clipboard.readText(),
+                `${editor.document.uri.fsPath}:${range}\n${note}${suffix}`);
+            count++;
+        }
+    }
+
     async function verify(editor, selection, range, selectedText) {
         editor.selection = selection;
         assert.equal(editor.document.getText(selection), selectedText);
-        await vscode.commands.executeCommand(command);
-        assert.equal(await vscode.env.clipboard.readText(),
-            `${editor.document.uri.fsPath}:${range}\n${note}\n\n${selectedText}`);
-        count++;
+        await verifyClipboard(editor, range, selectedText);
+    }
+
+    async function verifyUnchangedClipboard() {
+        const before = await vscode.env.clipboard.readText();
+        for (const command of commands) {
+            await vscode.commands.executeCommand(command);
+            assert.equal(await vscode.env.clipboard.readText(), before);
+            count++;
+        }
     }
 
     try {
@@ -45,11 +62,8 @@ async function run() {
         await verify(editor, new vscode.Selection(2, 0, 0, 2), '1:3-3:1', 'rst\r\n\tA😀e\u0301  \r\n');
         await verify(editor, new vscode.Selection(2, 0, 3, 0), '3:1-4:1', 'last\r\n');
 
-        const beforeEmpty = await vscode.env.clipboard.readText();
         editor.selection = new vscode.Selection(0, 0, 0, 0);
-        await vscode.commands.executeCommand(command);
-        assert.equal(await vscode.env.clipboard.readText(), beforeEmpty);
-        count++;
+        await verifyUnchangedClipboard();
 
         assert.ok(await editor.edit(builder => builder.insert(new vscode.Position(0, 0), 'changed ')));
         assert.equal(document.isDirty, true);
@@ -65,17 +79,12 @@ async function run() {
         await verify(lineFeedEditor, new vscode.Selection(0, 0, 1, 3), '1:1-2:4', 'one\ntwo');
 
         lineFeedEditor.selections = [new vscode.Selection(0, 0, 0, 3), new vscode.Selection(1, 0, 1, 3)];
-        await vscode.commands.executeCommand(command);
-        assert.equal(await vscode.env.clipboard.readText(), `${lineFeedDocument.uri.fsPath}:1:1-1:4\n${note}\n\none`);
-        count++;
+        await verifyClipboard(lineFeedEditor, '1:1-1:4', 'one');
 
         const untitled = await vscode.workspace.openTextDocument({ content: 'unsaved' });
         const untitledEditor = await vscode.window.showTextDocument(untitled);
         untitledEditor.selection = new vscode.Selection(0, 0, 0, 7);
-        const beforeUntitled = await vscode.env.clipboard.readText();
-        await vscode.commands.executeCommand(command);
-        assert.equal(await vscode.env.clipboard.readText(), beforeUntitled);
-        count++;
+        await verifyUnchangedClipboard();
         await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
 
         await fileSystem.writeFile(resultPath, JSON.stringify({ passed: true, count, version: vscode.version }, null, 2));

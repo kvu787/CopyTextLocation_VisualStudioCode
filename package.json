@@ -1,7 +1,7 @@
 {
   "name": "copytextlocation",
   "displayName": "Copy Text and Location",
-  "description": "Copy selected text with its file path and exact line and UTF-16 column range.",
+  "description": "Copy a selection's file path and exact line and UTF-16 column range, with or without the selected text.",
   "version": "0.1.0",
   "publisher": "kvu787",
   "license": "MIT",
@@ -25,6 +25,11 @@
         "command": "copyTextLocation.copyTextAndLocation",
         "title": "Copy text and location",
         "enablement": "editorHasSelection && (resourceScheme == file || resourceScheme == vscode-remote)"
+      },
+      {
+        "command": "copyTextLocation.copyLocation",
+        "title": "Copy location",
+        "enablement": "editorHasSelection && (resourceScheme == file || resourceScheme == vscode-remote)"
       }
     ],
     "menus": {
@@ -33,6 +38,11 @@
           "command": "copyTextLocation.copyTextAndLocation",
           "when": "editorHasSelection && (resourceScheme == file || resourceScheme == vscode-remote)",
           "group": "9_cutcopypaste@3"
+        },
+        {
+          "command": "copyTextLocation.copyLocation",
+          "when": "editorHasSelection && (resourceScheme == file || resourceScheme == vscode-remote)",
+          "group": "9_cutcopypaste@4"
         }
       ]
     }

@@ -7,6 +7,8 @@ const vm = require('node:vm');
 const source = fileSystem.readFileSync(path.join(__dirname, '../Source/Extension.js'), 'utf8');
 const note = 'Lines and columns are 1-based; columns count UTF-16 code units '
     + '(a tab counts as one unit). Start inclusive, end exclusive.';
+const textCommand = 'copyTextLocation.copyTextAndLocation';
+const locationCommand = 'copyTextLocation.copyLocation';
 
 function createEditor(text = 'Hello', filePath = 'C:\\Project\\Example.cs') {
     const selection = {
@@ -28,7 +30,7 @@ function createEditor(text = 'Hello', filePath = 'C:\\Project\\Example.cs') {
 }
 
 function activate(editor = createEditor(), writeText) {
-    const state = { clipboard: 'Existing clipboard', warnings: [], errors: [], subscriptions: [] };
+    const state = { clipboard: 'Existing clipboard', warnings: [], errors: [], subscriptions: [], commands: new Map() };
     const vscode = {
         window: {
             activeTextEditor: editor,
@@ -38,9 +40,9 @@ function activate(editor = createEditor(), writeText) {
         env: { clipboard: { writeText: writeText || (async text => { state.clipboard = text; }) } },
         commands: {
             registerCommand(command, callback) {
-                state.command = command;
-                state.execute = callback;
-                return { dispose() {} };
+                assert.ok(!state.commands.has(command), 'Each command is registered once');
+                state.commands.set(command, callback);
+                return { dispose() { state.commands.delete(command); } };
             }
         }
     };
@@ -55,23 +57,42 @@ function activate(editor = createEditor(), writeText) {
     vm.runInNewContext(source, context, { filename: 'Extension.js' });
     context.module.exports.activate(state);
     state.window = vscode.window;
+    state.execute = (command = textCommand) => state.commands.get(command)();
     return state;
 }
 
-test('registers the contributed command and disposes it with the extension', () => {
+test('registers both contributed commands and disposes them with the extension', () => {
     const state = activate();
     const manifest = require('../package.json');
-    assert.equal(state.command, manifest.contributes.commands[0].command);
-    assert.equal(manifest.contributes.commands[0].title, 'Copy text and location');
-    assert.equal(manifest.contributes.menus['editor/context'][0].command, state.command);
-    assert.equal(state.subscriptions.length, 1);
-    assert.equal(typeof state.subscriptions[0].dispose, 'function');
+    const expectedCommands = [textCommand, locationCommand];
+    assert.deepEqual([...state.commands.keys()], expectedCommands);
+    assert.deepEqual(manifest.contributes.commands.map(command => command.command), expectedCommands);
+    assert.deepEqual(manifest.contributes.commands.map(command => command.title), ['Copy text and location', 'Copy location']);
+    assert.deepEqual(manifest.contributes.menus['editor/context'].map(item => item.command), expectedCommands);
+    for (const command of manifest.contributes.commands) {
+        assert.equal(command.enablement, 'editorHasSelection && (resourceScheme == file || resourceScheme == vscode-remote)');
+    }
+    for (const item of manifest.contributes.menus['editor/context']) {
+        assert.equal(item.when, 'editorHasSelection && (resourceScheme == file || resourceScheme == vscode-remote)');
+        assert.ok(item.group.startsWith('9_cutcopypaste@'));
+    }
+    assert.equal(state.subscriptions.length, 2);
+    for (const subscription of state.subscriptions) { subscription.dispose(); }
+    assert.equal(state.commands.size, 0);
 });
 
 test('copies the complete single-line payload, including both endpoints', async () => {
     const state = activate();
     await state.execute();
     assert.equal(state.clipboard, `C:\\Project\\Example.cs:12:5-12:10\n${note}\n\nHello`);
+});
+
+test('Copy location copies only the path, range, and note without reading selected text', async () => {
+    const editor = createEditor();
+    editor.document.getText = () => { assert.fail('Copy location must not read the selected text'); };
+    const state = activate(editor);
+    await state.execute(locationCommand);
+    assert.equal(state.clipboard, `C:\\Project\\Example.cs:12:5-12:10\n${note}`);
 });
 
 for (const filePath of [
@@ -85,6 +106,8 @@ for (const filePath of [
         const state = activate(createEditor('Hello', filePath));
         await state.execute();
         assert.equal(state.clipboard, `${filePath}:12:5-12:10\n${note}\n\nHello`);
+        await state.execute(locationCommand);
+        assert.equal(state.clipboard, `${filePath}:12:5-12:10\n${note}`);
     });
 }
 
@@ -104,6 +127,8 @@ test('uses ordered multiline endpoints even for a reversed selection', async () 
     const state = activate(editor);
     await state.execute();
     assert.equal(state.clipboard.split('\n')[0], 'C:\\Project\\Example.cs:12:5-15:9');
+    await state.execute(locationCommand);
+    assert.equal(state.clipboard, `C:\\Project\\Example.cs:12:5-15:9\n${note}`);
 });
 
 test('keeps an exclusive endpoint at the beginning of the following line', async () => {
@@ -112,6 +137,8 @@ test('keeps an exclusive endpoint at the beginning of the following line', async
     const state = activate(editor);
     await state.execute();
     assert.equal(state.clipboard, `C:\\Project\\Example.cs:12:5-13:1\n${note}\n\nHello\r\n`);
+    await state.execute(locationCommand);
+    assert.equal(state.clipboard, `C:\\Project\\Example.cs:12:5-13:1\n${note}`);
 });
 
 test('copies the primary selection when multiple selections exist', async () => {
@@ -120,6 +147,8 @@ test('copies the primary selection when multiple selections exist', async () => 
     const state = activate(editor);
     await state.execute();
     assert.equal(state.clipboard, `C:\\Project\\Example.cs:12:5-12:10\n${note}\n\nHello`);
+    await state.execute(locationCommand);
+    assert.equal(state.clipboard, `C:\\Project\\Example.cs:12:5-12:10\n${note}`);
 });
 
 test('copies remote files using their filesystem paths', async () => {
@@ -128,6 +157,8 @@ test('copies remote files using their filesystem paths', async () => {
     const state = activate(editor);
     await state.execute();
     assert.equal(state.clipboard, `/work/Example.cs:12:5-12:10\n${note}\n\nHello`);
+    await state.execute(locationCommand);
+    assert.equal(state.clipboard, `/work/Example.cs:12:5-12:10\n${note}`);
 });
 
 for (const scenario of ['no editor', 'empty selection', 'untitled document', 'virtual document']) {
@@ -138,22 +169,25 @@ for (const scenario of ['no editor', 'empty selection', 'untitled document', 'vi
         if (scenario === 'virtual document') { editor.document.uri.scheme = 'git'; }
         const state = activate(editor);
         if (scenario === 'no editor') { state.window.activeTextEditor = undefined; }
-        await state.execute();
+        await state.execute(textCommand);
+        await state.execute(locationCommand);
         assert.equal(state.clipboard, 'Existing clipboard');
-        assert.equal(state.warnings.length, 1);
+        assert.equal(state.warnings.length, 2);
         assert.equal(state.errors.length, 0);
     });
 }
 
-test('awaits clipboard completion and reports clipboard failures', async () => {
-    let rejectWrite;
-    const state = activate(createEditor(), () => new Promise((resolve, reject) => { rejectWrite = reject; }));
-    let completed = false;
-    const result = state.execute().then(() => { completed = true; });
-    await Promise.resolve();
-    assert.equal(completed, false);
-    rejectWrite(new Error('Clipboard unavailable'));
-    await result;
-    assert.deepEqual(state.errors, ['Could not copy text and location: Clipboard unavailable']);
-    assert.equal(state.clipboard, 'Existing clipboard');
-});
+for (const [command, description] of [[textCommand, 'text and location'], [locationCommand, 'location']]) {
+    test(`${command} awaits clipboard completion and reports clipboard failures`, async () => {
+        let rejectWrite;
+        const state = activate(createEditor(), () => new Promise((resolve, reject) => { rejectWrite = reject; }));
+        let completed = false;
+        const result = state.execute(command).then(() => { completed = true; });
+        await Promise.resolve();
+        assert.equal(completed, false);
+        rejectWrite(new Error('Clipboard unavailable'));
+        await result;
+        assert.deepEqual(state.errors, [`Could not copy ${description}: Clipboard unavailable`]);
+        assert.equal(state.clipboard, 'Existing clipboard');
+    });
+}
