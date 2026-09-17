@@ -163,3 +163,15 @@ Define it as:
 - Columns count **UTF-16 code units**, matching [VS Code’s position model](https://code.visualstudio.com/api/references/vscode-api#Position). A tab counts as one unit, regardless of its displayed width.
 
 For example, `12:5-12:10` selects columns 5 through 9 on line 12. Keep both endpoints even for single-line selections so the format stays consistent.
+
+## user
+
+update specification.md with this
+
+## assistant
+
+I’ll add the format and its rules to Specification.md, then commit the specification change and conversation log separately.
+
+## assistant
+
+Updated [Specification.md](C:/Users/k/Repository/CopyTextLocation_VisualStudioCode/Specification.md) with the agreed format, rules, and examples. Committed the specification and conversation log separately.
