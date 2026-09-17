@@ -1,0 +1,12 @@
+.git/**
+.vscode/**
+Build/**
+Conversations/**
+MyLogOutput/**
+Scripts/**
+Tests/**
+AGENTS.md
+Specification.md
+Run.cmd
+Run.ps1
+.gitignore

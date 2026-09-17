@@ -1,0 +1,45 @@
+{
+  "name": "copytextlocation",
+  "displayName": "Copy Text and Location",
+  "description": "Copy selected text with its file path and exact line and UTF-16 column range.",
+  "version": "0.1.0",
+  "publisher": "kvu787",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kvu787/CopyTextLocation_VisualStudioCode.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "main": "./Source/Extension.js",
+  "extensionKind": ["workspace"],
+  "capabilities": {
+    "untrustedWorkspaces": { "supported": true },
+    "virtualWorkspaces": { "supported": false }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "copyTextLocation.copyTextAndLocation",
+        "title": "Copy text and location",
+        "enablement": "editorHasSelection && (resourceScheme == file || resourceScheme == vscode-remote)"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "copyTextLocation.copyTextAndLocation",
+          "when": "editorHasSelection && (resourceScheme == file || resourceScheme == vscode-remote)",
+          "group": "9_cutcopypaste@3"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node Scripts/Build.js",
+    "test": "node --test Tests/Extension.test.js",
+    "vscode:prepublish": "node Scripts/Build.js"
+  }
+}

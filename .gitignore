@@ -1,0 +1,4 @@
+Build/
+MyLogOutput/
+node_modules/
+*.vsix
