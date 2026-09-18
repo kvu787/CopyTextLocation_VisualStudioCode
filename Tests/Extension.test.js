@@ -5,8 +5,7 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 const source = fileSystem.readFileSync(path.join(__dirname, '../Source/Extension.js'), 'utf8');
-const note = 'Lines and columns are 1-based; columns count UTF-16 code units '
-    + '(a tab counts as one unit). Start inclusive, end exclusive.';
+const note = 'Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.';
 const textCommand = 'copyTextLocation.copyTextAndLocation';
 const locationCommand = 'copyTextLocation.copyLocation';
 
@@ -81,18 +80,18 @@ test('registers both contributed commands and disposes them with the extension',
     assert.equal(state.commands.size, 0);
 });
 
-test('copies the complete single-line payload, including both endpoints', async () => {
+test('copies the complete single-line payload, including delimiters, both endpoints, and trailing newlines', async () => {
     const state = activate();
     await state.execute();
-    assert.equal(state.clipboard, `C:\\Project\\Example.cs:12:5-12:10\n${note}\n\nHello`);
+    assert.equal(state.clipboard, `<<<LOCATION_START\n${note}\nC:\\Project\\Example.cs:12:5-12:10\n>>>LOCATION_END\n<<<TEXT_START\nHello\n>>>TEXT_END\n`);
 });
 
-test('Copy location copies only the path, range, and note without reading selected text', async () => {
+test('Copy location copies only the delimited location block with a trailing newline without reading selected text', async () => {
     const editor = createEditor();
     editor.document.getText = () => { assert.fail('Copy location must not read the selected text'); };
     const state = activate(editor);
     await state.execute(locationCommand);
-    assert.equal(state.clipboard, `C:\\Project\\Example.cs:12:5-12:10\n${note}`);
+    assert.equal(state.clipboard, `<<<LOCATION_START\n${note}\nC:\\Project\\Example.cs:12:5-12:10\n>>>LOCATION_END\n`);
 });
 
 for (const filePath of [
@@ -105,17 +104,17 @@ for (const filePath of [
     test(`uses the filesystem path unchanged: ${filePath}`, async () => {
         const state = activate(createEditor('Hello', filePath));
         await state.execute();
-        assert.equal(state.clipboard, `${filePath}:12:5-12:10\n${note}\n\nHello`);
+        assert.equal(state.clipboard, `<<<LOCATION_START\n${note}\n${filePath}:12:5-12:10\n>>>LOCATION_END\n<<<TEXT_START\nHello\n>>>TEXT_END\n`);
         await state.execute(locationCommand);
-        assert.equal(state.clipboard, `${filePath}:12:5-12:10\n${note}`);
+        assert.equal(state.clipboard, `<<<LOCATION_START\n${note}\n${filePath}:12:5-12:10\n>>>LOCATION_END\n`);
     });
 }
 
-for (const selectedText of ['  \tHello  ', 'first\nsecond\n', 'first\r\nsecond\r\n', '\t😀e\u0301', '```\n<>&\\\n```', '\n']) {
-    test(`preserves the selection verbatim: ${JSON.stringify(selectedText)}`, async () => {
+for (const selectedText of ['  \tHello  ', 'first\nsecond\n', 'first\r\nsecond\r\n', '\t😀e\u0301', '```\n<>&\\\n```', '\n', '<<<LOCATION_START\n>>>LOCATION_END\n<<<TEXT_START\n>>>TEXT_END']) {
+    test(`preserves the selection verbatim inside the text block: ${JSON.stringify(selectedText)}`, async () => {
         const state = activate(createEditor(selectedText));
         await state.execute();
-        assert.equal(state.clipboard.slice(state.clipboard.indexOf('\n\n') + 2), selectedText);
+        assert.equal(state.clipboard, `<<<LOCATION_START\n${note}\nC:\\Project\\Example.cs:12:5-12:10\n>>>LOCATION_END\n<<<TEXT_START\n${selectedText}\n>>>TEXT_END\n`);
     });
 }
 
@@ -126,9 +125,9 @@ test('uses ordered multiline endpoints even for a reversed selection', async () 
     editor.selection.active = editor.selection.start;
     const state = activate(editor);
     await state.execute();
-    assert.equal(state.clipboard.split('\n')[0], 'C:\\Project\\Example.cs:12:5-15:9');
+    assert.equal(state.clipboard, `<<<LOCATION_START\n${note}\nC:\\Project\\Example.cs:12:5-15:9\n>>>LOCATION_END\n<<<TEXT_START\nfirst\nsecond\n>>>TEXT_END\n`);
     await state.execute(locationCommand);
-    assert.equal(state.clipboard, `C:\\Project\\Example.cs:12:5-15:9\n${note}`);
+    assert.equal(state.clipboard, `<<<LOCATION_START\n${note}\nC:\\Project\\Example.cs:12:5-15:9\n>>>LOCATION_END\n`);
 });
 
 test('keeps an exclusive endpoint at the beginning of the following line', async () => {
@@ -136,9 +135,9 @@ test('keeps an exclusive endpoint at the beginning of the following line', async
     editor.selection.end = { line: 12, character: 0 };
     const state = activate(editor);
     await state.execute();
-    assert.equal(state.clipboard, `C:\\Project\\Example.cs:12:5-13:1\n${note}\n\nHello\r\n`);
+    assert.equal(state.clipboard, `<<<LOCATION_START\n${note}\nC:\\Project\\Example.cs:12:5-13:1\n>>>LOCATION_END\n<<<TEXT_START\nHello\r\n\n>>>TEXT_END\n`);
     await state.execute(locationCommand);
-    assert.equal(state.clipboard, `C:\\Project\\Example.cs:12:5-13:1\n${note}`);
+    assert.equal(state.clipboard, `<<<LOCATION_START\n${note}\nC:\\Project\\Example.cs:12:5-13:1\n>>>LOCATION_END\n`);
 });
 
 test('copies the primary selection when multiple selections exist', async () => {
@@ -146,9 +145,9 @@ test('copies the primary selection when multiple selections exist', async () => 
     editor.selections = [editor.selection, { start: { line: 20, character: 0 } }];
     const state = activate(editor);
     await state.execute();
-    assert.equal(state.clipboard, `C:\\Project\\Example.cs:12:5-12:10\n${note}\n\nHello`);
+    assert.equal(state.clipboard, `<<<LOCATION_START\n${note}\nC:\\Project\\Example.cs:12:5-12:10\n>>>LOCATION_END\n<<<TEXT_START\nHello\n>>>TEXT_END\n`);
     await state.execute(locationCommand);
-    assert.equal(state.clipboard, `C:\\Project\\Example.cs:12:5-12:10\n${note}`);
+    assert.equal(state.clipboard, `<<<LOCATION_START\n${note}\nC:\\Project\\Example.cs:12:5-12:10\n>>>LOCATION_END\n`);
 });
 
 test('copies remote files using their filesystem paths', async () => {
@@ -156,9 +155,9 @@ test('copies remote files using their filesystem paths', async () => {
     editor.document.uri.scheme = 'vscode-remote';
     const state = activate(editor);
     await state.execute();
-    assert.equal(state.clipboard, `/work/Example.cs:12:5-12:10\n${note}\n\nHello`);
+    assert.equal(state.clipboard, `<<<LOCATION_START\n${note}\n/work/Example.cs:12:5-12:10\n>>>LOCATION_END\n<<<TEXT_START\nHello\n>>>TEXT_END\n`);
     await state.execute(locationCommand);
-    assert.equal(state.clipboard, `/work/Example.cs:12:5-12:10\n${note}`);
+    assert.equal(state.clipboard, `<<<LOCATION_START\n${note}\n/work/Example.cs:12:5-12:10\n>>>LOCATION_END\n`);
 });
 
 for (const scenario of ['no editor', 'empty selection', 'untitled document', 'virtual document']) {

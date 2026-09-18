@@ -9,17 +9,17 @@ async function run() {
     const resultPath = path.join(output, 'IntegrationResults.json');
     // Exercise automatic activation through the newly added command first.
     const commands = ['copyTextLocation.copyLocation', 'copyTextLocation.copyTextAndLocation'];
-    const note = 'Lines and columns are 1-based; columns count UTF-16 code units '
-        + '(a tab counts as one unit). Start inclusive, end exclusive.';
+    const note = 'Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.';
     let originalClipboard;
     let count = 0;
 
     async function verifyClipboard(editor, range, selectedText) {
         for (const command of commands) {
             await vscode.commands.executeCommand(command);
-            const suffix = command === 'copyTextLocation.copyTextAndLocation' ? `\n\n${selectedText}` : '';
+            const suffix = command === 'copyTextLocation.copyTextAndLocation'
+                ? `<<<TEXT_START\n${selectedText}\n>>>TEXT_END\n` : '';
             assert.equal(await vscode.env.clipboard.readText(),
-                `${editor.document.uri.fsPath}:${range}\n${note}${suffix}`);
+                `<<<LOCATION_START\n${note}\n${editor.document.uri.fsPath}:${range}\n>>>LOCATION_END\n${suffix}`);
             count++;
         }
     }
