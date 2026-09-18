@@ -22,3 +22,26 @@ I recommend `@@@` for both opening and closing markers. It has no special meanin
 ...
 @@@TEXT_END
 ```
+
+## user
+
+recommend an alternative that is "directional" as in there are two directions that can be used to distinguish "start" and "end"
+
+## assistant
+
+`«««` and `»»»` preserve the directional appearance of your current markers without triggering Markdown blockquotes.
+
+## assistant
+
+I recommend **`«««` for start and `»»»` for end**. These are Unicode guillemets and have no special meaning in standard Markdown.
+
+```text
+«««LOCATION_START
+...
+»»»LOCATION_END
+«««TEXT_START
+...
+»»»TEXT_END
+```
+
+For an ASCII-only alternative, use `{{{` and `}}}`.
