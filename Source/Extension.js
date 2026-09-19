@@ -26,8 +26,9 @@ async function copySelection(includeText) {
         + `-${end.line + 1}:${end.character + 1}`;
     const note = 'Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.';
     // Keep the selected text last, with no escaping, indentation, or added suffix.
-    const clipboardText = `<<<LOCATION_START\n${note}\n${location}\n>>>LOCATION_END\n`
-        + (includeText ? `<<<TEXT_START\n${document.getText(selection)}\n>>>TEXT_END\n` : '');
+    const clipboardText =
+        '```\n' + `${note}\n${location}\n` + '```\n' +
+        (includeText ? ('```\n' + `${document.getText(selection)}\n` + '```\n') : '');
 
     try {
         await vscode.env.clipboard.writeText(clipboardText);
