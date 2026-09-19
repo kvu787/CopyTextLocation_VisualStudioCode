@@ -2,25 +2,32 @@
 
 Select text in a file, right-click the selection, and choose **Copy text and location** or **Copy location**. Both commands are also available in the Command Palette.
 
-**Copy text and location** puts the absolute file path and range, a note defining the coordinates, a blank line, and the exact selected text on the clipboard:
+**Copy text and location** puts two Markdown code blocks on the clipboard. The first contains the coordinate note followed by the absolute file path and range. The second contains the exact selected text:
 
-```text
+````text
+```
+Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
 C:\Project\Example.cs:12:5-12:10
-Lines and columns are 1-based; columns count UTF-16 code units (a tab counts as one unit). Start inclusive, end exclusive.
-
+```
+```
 Hello
 ```
+````
 
-**Copy location** includes the same path, range, and coordinate note, without the blank line or selected text:
+**Copy location** includes only the first block:
 
-```text
-C:\Project\Example.cs:12:5-12:10
-Lines and columns are 1-based; columns count UTF-16 code units (a tab counts as one unit). Start inclusive, end exclusive.
+````text
 ```
+Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
+C:\Project\Example.cs:12:5-12:10
+```
+````
+
+Each block uses exactly three backticks on its opening and closing lines, without a language label. There is no blank line between the blocks, and the output ends with a newline after the last closing fence.
 
 Both endpoints are always included. Paths use the operating system's native separators. Coordinates use [VS Code's UTF-16 position model](https://code.visualstudio.com/api/references/vscode-api#Position): an emoji outside the basic multilingual plane takes two column units, and a tab takes one.
 
-Selected text is copied directly from the editor, preserving whitespace, tabs, line endings, and unsaved edits. Nothing is appended after it. Metadata lines use LF line endings. Selections made backwards produce the same ordered range as forward selections. With multiple selections, the primary selection is copied. Its range describes the current editor contents, which may differ from the saved file.
+Selected text is copied directly from the editor, preserving whitespace, tabs, line endings, backticks, and unsaved edits. One LF newline is always added after the selected text, even if the selection already ends with a newline, before the closing fence. The coordinate note, location, and fence lines also use LF line endings. Backticks in the selection are not escaped, and the surrounding fences are not lengthened. Selections made backwards produce the same ordered range as forward selections. With multiple selections, the primary selection is copied. Its range describes the current editor contents, which may differ from the saved file.
 
 Both commands use the primary selection and are shown for nonempty selections in local files and remote files (SSH, WSL, or containers). Remote paths use the extension host's operating system. Untitled and virtual documents are excluded because they do not have a usable file path; invoking either command directly explains the problem without changing the clipboard.
 
@@ -58,7 +65,7 @@ Follow these steps to install the extension for everyday use on Windows, macOS, 
 
 6. **Confirm that it is installed.** Open the Extensions view and search for `@installed Copy Text and Location`. The extension should appear and be enabled.
 
-7. **Try it.** Open a file saved on disk, select some text, right-click the selection, and choose **Copy text and location**. Paste into another editor to check that the file path, range, coordinate note, and selected text are present. Repeat with **Copy location** to copy just the file path, range, and coordinate note. Both commands require a nonempty selection in a supported file; save a new untitled file before trying them.
+7. **Try it.** Open a file saved on disk, select some text, right-click the selection, and choose **Copy text and location**. Paste into another editor to check that the first triple-backtick block contains the coordinate note and file path with range, and the second contains the selected text. Repeat with **Copy location** to copy only the first block. Both commands require a nonempty selection in a supported file; save a new untitled file before trying them.
 
 To install an updated copy, repeat the packaging and installation steps with the updated source files.
 
@@ -84,4 +91,4 @@ The extension is plain JavaScript with no runtime or development dependencies. W
 
 To run in a development window on macOS or Linux, launch `code --extensionDevelopmentPath="$PWD/Build/CopyTextLocation"` after building. To install into your usual VS Code profile, follow [Install into VS Code](#install-into-vs-code) above. The package excludes conversations, tests, scripts, and session logs.
 
-The tests cover exact clipboard output, both endpoints, native paths, whitespace, Unicode, empty selections, unsupported documents, and clipboard failures. The VS Code integration checks exercise actual selections, clipboard writes, activation, and unsaved edits.
+The tests cover exact clipboard output, triple-backtick fences, trailing newlines, both endpoints, native paths, whitespace, Unicode, empty selections, unsupported documents, and clipboard failures. The VS Code integration checks exercise actual selections, clipboard writes, activation, unsaved edits, and selected Markdown containing code fences.

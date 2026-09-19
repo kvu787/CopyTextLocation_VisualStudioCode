@@ -17,9 +17,9 @@ async function run() {
         for (const command of commands) {
             await vscode.commands.executeCommand(command);
             const suffix = command === 'copyTextLocation.copyTextAndLocation'
-                ? `<<<TEXT_START\n${selectedText}\n>>>TEXT_END\n` : '';
+                ? `\`\`\`\n${selectedText}\n\`\`\`\n` : '';
             assert.equal(await vscode.env.clipboard.readText(),
-                `<<<LOCATION_START\n${note}\n${editor.document.uri.fsPath}:${range}\n>>>LOCATION_END\n${suffix}`);
+                `\`\`\`\n${note}\n${editor.document.uri.fsPath}:${range}\n\`\`\`\n${suffix}`);
             count++;
         }
     }
@@ -80,6 +80,13 @@ async function run() {
 
         lineFeedEditor.selections = [new vscode.Selection(0, 0, 0, 3), new vscode.Selection(1, 0, 1, 3)];
         await verifyClipboard(lineFeedEditor, '1:1-1:4', 'one');
+
+        const markdownText = '```javascript\nconst value = `example`;\n```\n';
+        const markdownPath = path.join(output, 'FencedMarkdown.md');
+        await fileSystem.writeFile(markdownPath, markdownText, 'utf8');
+        const markdownDocument = await vscode.workspace.openTextDocument(vscode.Uri.file(markdownPath));
+        const markdownEditor = await vscode.window.showTextDocument(markdownDocument);
+        await verify(markdownEditor, new vscode.Selection(0, 0, 3, 0), '1:1-4:1', markdownText);
 
         const untitled = await vscode.workspace.openTextDocument({ content: 'unsaved' });
         const untitledEditor = await vscode.window.showTextDocument(untitled);

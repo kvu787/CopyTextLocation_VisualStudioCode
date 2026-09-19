@@ -25,7 +25,7 @@ async function copySelection(includeText) {
     const location = `${document.uri.fsPath}:${start.line + 1}:${start.character + 1}`
         + `-${end.line + 1}:${end.character + 1}`;
     const note = 'Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.';
-    // Keep the selected text last, with no escaping, indentation, or added suffix.
+    // Preserve the selection verbatim inside its fence, then add LF and the closing fence.
     const clipboardText =
         '```\n' + `${note}\n${location}\n` + '```\n' +
         (includeText ? ('```\n' + `${document.getText(selection)}\n` + '```\n') : '');

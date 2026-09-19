@@ -20,4 +20,38 @@ C:\Project\Example.cs:12:5-15:9
 
 For example, `12:5-12:10` selects columns 5 through 9 on line 12.
 
-The copied text must include a note specifying that columns count UTF-16 code units so that the text location is unambiguous.
+The copied output must include this exact coordinate note before the path and range:
+
+```text
+Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
+```
+
+## Clipboard format
+
+`Copy location` copies one Markdown code block containing the coordinate note followed by the absolute file path and range:
+
+````text
+```
+Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
+C:\Project\Example.cs:12:5-12:10
+```
+````
+
+`Copy text and location` appends a second code block containing the exact selected text, with no blank line between the blocks:
+
+````text
+```
+Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
+C:\Project\Example.cs:12:5-12:10
+```
+```
+Hello
+```
+````
+
+- Every opening and closing fence is exactly three backticks, with no language label.
+- The coordinate note, location, and fence lines end with LF, including the final closing fence.
+- The selected text is preserved verbatim, including whitespace, tabs, line endings, and backticks. Its range refers to the current editor contents, including unsaved edits.
+- Exactly one LF is added after the selected text before its closing fence, even when the selection already ends with a newline. This added newline and the fences are outside the selection and its reported range.
+- Backticks inside the selected text are not escaped, and the surrounding fences are not lengthened.
+- Both commands use the primary selection when multiple selections exist.
