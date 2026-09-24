@@ -20,7 +20,7 @@ C:\Project\Example.cs:12:5-15:9
 
 For example, `12:5-12:10` selects columns 5 through 9 on line 12.
 
-The copied output must include this exact coordinate note before the path and range:
+The copied output must include this exact coordinate note after the path and range:
 
 ```text
 Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
@@ -28,29 +28,31 @@ Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns 
 
 ## Clipboard format
 
-`Copy location` copies one Markdown code block containing the coordinate note followed by the absolute file path and range:
+`Copy location` copies one Markdown code block containing the absolute file path and range followed by the coordinate note:
 
 ````text
 ```
-Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
 C:\Project\Example.cs:12:5-12:10
+Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
 ```
+
 ````
 
-`Copy text and location` appends a second code block containing the exact selected text, with no blank line between the blocks:
+`Copy text and location` appends a second code block containing the exact selected text, with one blank line between the blocks:
 
 ````text
 ```
-Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
 C:\Project\Example.cs:12:5-12:10
+Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
 ```
+
 ```
 Hello
 ```
 ````
 
 - Every opening and closing fence is exactly three backticks, with no language label.
-- The coordinate note, location, and fence lines end with LF, including the final closing fence.
+- The location, coordinate note, and fence lines end with LF, including the final closing fence. One additional LF always follows the location block, creating a blank line between the blocks or a trailing blank line for `Copy location`.
 - The selected text is preserved verbatim, including whitespace, tabs, line endings, and backticks. Its range refers to the current editor contents, including unsaved edits.
 - Exactly one LF is added after the selected text before its closing fence, even when the selection already ends with a newline. This added newline and the fences are outside the selection and its reported range.
 - Backticks inside the selected text are not escaped, and the surrounding fences are not lengthened.

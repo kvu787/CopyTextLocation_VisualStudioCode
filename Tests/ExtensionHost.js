@@ -19,7 +19,7 @@ async function run() {
             const suffix = command === 'copyTextLocation.copyTextAndLocation'
                 ? `\`\`\`\n${selectedText}\n\`\`\`\n` : '';
             assert.equal(await vscode.env.clipboard.readText(),
-                `\`\`\`\n${note}\n${editor.document.uri.fsPath}:${range}\n\`\`\`\n${suffix}`);
+                `\`\`\`\n${editor.document.uri.fsPath}:${range}\n${note}\n\`\`\`\n\n${suffix}`);
             count++;
         }
     }

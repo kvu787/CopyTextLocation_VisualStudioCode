@@ -2,13 +2,14 @@
 
 Select text in a file, right-click the selection, and choose **Copy text and location** or **Copy location**. Both commands are also available in the Command Palette.
 
-**Copy text and location** puts two Markdown code blocks on the clipboard. The first contains the coordinate note followed by the absolute file path and range. The second contains the exact selected text:
+**Copy text and location** puts two Markdown code blocks on the clipboard. The first contains the absolute file path and range followed by the coordinate note. The second contains the exact selected text:
 
 ````text
 ```
-Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
 C:\Project\Example.cs:12:5-12:10
+Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
 ```
+
 ```
 Hello
 ```
@@ -18,12 +19,13 @@ Hello
 
 ````text
 ```
-Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
 C:\Project\Example.cs:12:5-12:10
+Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
 ```
+
 ````
 
-Each block uses exactly three backticks on its opening and closing lines, without a language label. There is no blank line between the blocks, and the output ends with a newline after the last closing fence.
+Each block uses exactly three backticks on its opening and closing lines, without a language label. The location block is always followed by one blank line, including when copied alone. When selected text is included, its block follows that blank line and ends with one newline after its closing fence.
 
 Both endpoints are always included. Paths use the operating system's native separators. Coordinates use [VS Code's UTF-16 position model](https://code.visualstudio.com/api/references/vscode-api#Position): an emoji outside the basic multilingual plane takes two column units, and a tab takes one.
 
@@ -65,7 +67,7 @@ Follow these steps to install the extension for everyday use on Windows, macOS, 
 
 6. **Confirm that it is installed.** Open the Extensions view and search for `@installed Copy Text and Location`. The extension should appear and be enabled.
 
-7. **Try it.** Open a file saved on disk, select some text, right-click the selection, and choose **Copy text and location**. Paste into another editor to check that the first triple-backtick block contains the coordinate note and file path with range, and the second contains the selected text. Repeat with **Copy location** to copy only the first block. Both commands require a nonempty selection in a supported file; save a new untitled file before trying them.
+7. **Try it.** Open a file saved on disk, select some text, right-click the selection, and choose **Copy text and location**. Paste into another editor to check that the first triple-backtick block contains the file path with range followed by the coordinate note, and the second contains the selected text. Repeat with **Copy location** to copy only the first block. Both commands require a nonempty selection in a supported file; save a new untitled file before trying them.
 
 To install an updated copy, repeat the packaging and installation steps with the updated source files.
 
