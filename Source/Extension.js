@@ -27,7 +27,7 @@ async function copySelection(includeText) {
     const note = 'Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.';
     // Preserve the selection verbatim inside its fence, then add LF and the closing fence.
     const clipboardText =
-        '```\n' + `${note}\n${location}\n` + '```\n' +
+        '```\n' + `${location}\n${note}\n` + '```\n\n' +
         (includeText ? ('```\n' + `${document.getText(selection)}\n` + '```\n') : '');
 
     try {
