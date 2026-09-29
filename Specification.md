@@ -35,24 +35,22 @@ Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns 
 C:\Project\Example.cs:12:5-12:10
 Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
 ```
-
 ````
 
-`Copy text and location` appends a second code block containing the exact selected text, with one blank line between the blocks:
+`Copy text and location` appends a second code block containing the exact selected text, with no blank line between the blocks:
 
 ````text
 ```
 C:\Project\Example.cs:12:5-12:10
 Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
 ```
-
 ```
 Hello
 ```
 ````
 
 - Every opening and closing fence is exactly three backticks, with no language label.
-- The location, coordinate note, and fence lines end with LF, including the final closing fence. One additional LF always follows the location block, creating a blank line between the blocks or a trailing blank line for `Copy location`.
+- The location, coordinate note, and fence lines end with LF, including the final closing fence. No additional LF follows the location block: the text block starts on the next line, and `Copy location` ends with exactly one LF after its closing fence.
 - The selected text is preserved verbatim, including whitespace, tabs, line endings, and backticks. Its range refers to the current editor contents, including unsaved edits.
 - Exactly one LF is added after the selected text before its closing fence, even when the selection already ends with a newline. This added newline and the fences are outside the selection and its reported range.
 - Backticks inside the selected text are not escaped, and the surrounding fences are not lengthened.

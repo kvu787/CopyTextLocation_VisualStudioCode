@@ -9,7 +9,6 @@ Select text in a file, right-click the selection, and choose **Copy text and loc
 C:\Project\Example.cs:12:5-12:10
 Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
 ```
-
 ```
 Hello
 ```
@@ -22,10 +21,9 @@ Hello
 C:\Project\Example.cs:12:5-12:10
 Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.
 ```
-
 ````
 
-Each block uses exactly three backticks on its opening and closing lines, without a language label. The location block is always followed by one blank line, including when copied alone. When selected text is included, its block follows that blank line and ends with one newline after its closing fence.
+Each block uses exactly three backticks on its opening and closing lines, without a language label. The location block ends with one LF newline after its closing fence, including when copied alone. When selected text is included, its opening fence immediately follows on the next line, with no blank line between the blocks. Its closing fence also ends with one LF newline.
 
 Both endpoints are always included. Paths use the operating system's native separators. Coordinates use [VS Code's UTF-16 position model](https://code.visualstudio.com/api/references/vscode-api#Position): an emoji outside the basic multilingual plane takes two column units, and a tab takes one.
 
