@@ -36,3 +36,17 @@ VS Code's `Uri.fsPath` lowercases the drive letter; I confirmed this in the inst
 - Multiple selections still copy only the primary selection, as discussed in an earlier conversation. Copying every selection would mean a new output format.
 
 This conversation is recorded in [Conversations/RepoReview.md](Conversations/RepoReview.md).
+
+## user
+
+Uppercase it
+
+## assistant
+
+Done. Copied Windows paths now start with an uppercase drive letter, for example `C:\Project\Example.cs:12:5-12:10`.
+
+- [Extension.js](Source/Extension.js) uppercases a leading lowercase drive letter and leaves the rest of the path unchanged. POSIX and UNC paths are not affected.
+- The unit tests now use VS Code's lowercase `c:\` form by default, and a new test covers the drive letter on its own. On Windows, the integration test expects an uppercase drive letter.
+- [Specification.md](Specification.md) and the [README](README.md) now state the uppercase rule.
+
+The build, 27 unit tests, and 20 VS Code integration checks pass. Branch `claude/repo-review-2c52cb` has three fix commits plus this conversation log. Nothing is pushed or merged into `main`.
