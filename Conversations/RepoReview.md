@@ -80,3 +80,13 @@ Two caveats:
 `Run.cmd` doesn't need this Node.js at all, because it uses the copy bundled with VS Code.
 
 If you want to install it now, the packaged `copytextlocation-0.1.0.vsix` is in the worktree root. Git ignores it.
+
+## user
+
+merge into main
+
+## assistant
+
+Merged. `main` in your main checkout is fast-forwarded to the tip of `claude/repo-review-2c52cb`, so there's no merge commit. It now includes the packaging allowlist, the uppercase drive-letter fix and its docs, and this conversation log.
+
+`main` is 7 commits ahead of `origin/main` and has not been pushed.
