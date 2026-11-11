@@ -50,3 +50,33 @@ Done. Copied Windows paths now start with an uppercase drive letter, for example
 - [Specification.md](Specification.md) and the [README](README.md) now state the uppercase rule.
 
 The build, 27 unit tests, and 20 VS Code integration checks pass. Branch `claude/repo-review-2c52cb` has three fix commits plus this conversation log. Nothing is pushed or merged into `main`.
+
+## user
+
+is the standalone build of node at C:\Users\K\Program\node-v26.13.0-win-x64 sufficient to develop and install this extension
+
+## assistant
+
+Build and all 27 unit tests pass with it. Next I'm packaging with the README's `npx @vscode/vsce` command. This also checks the packaging fix against the real tool.
+
+## assistant
+
+Yes, it's sufficient. I tested the whole flow with Node 26.13.0 and npm 11.20.0 from that folder:
+
+- **Develop:** `node Scripts/Build.js`, `node --test Tests/Extension.test.js`, and `npm test` all work, and the 27 unit tests pass. The extension has no dependencies, so you never need `npm install`.
+- **Package:** `npx.cmd --yes @vscode/vsce package --no-dependencies` (vsce 4.1.0) produced `copytextlocation-0.1.0.vsix`. It contains only `package.json`, the README, the LICENSE, and `Source/Extension.js`. This also confirms the packaging fix with the real tool. The first run needs internet access to download vsce.
+- **Install:** The VSIX installed cleanly into a throwaway VS Code profile. Installing into your real profile is done by VS Code itself and needs no Node.js.
+
+Two caveats:
+
+- The folder isn't on your PATH. Either add it to your user PATH and restart VS Code, or run this first in each PowerShell terminal:
+
+  ```powershell
+  $env:Path = "$env:UserProfile\Program\node-v26.13.0-win-x64;$env:Path"
+  ```
+
+- In PowerShell, use `npx.cmd` and `npm.cmd`. The `.ps1` versions can be blocked by the execution policy.
+
+`Run.cmd` doesn't need this Node.js at all, because it uses the copy bundled with VS Code.
+
+If you want to install it now, the packaged `copytextlocation-0.1.0.vsix` is in the worktree root. Git ignores it.
