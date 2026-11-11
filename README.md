@@ -53,6 +53,13 @@ Follow these steps to install the extension for everyday use on Windows, macOS, 
    npx --yes @vscode/vsce package --no-dependencies
    ```
 
+   ```cmd
+   REM copy/paste batch commands for my machine
+   cd "C:\Users\K\Repository\CopyTextLocation_VisualStudioCode"
+   set "PATH=C:\Users\K\Program\node-v26.13.0-win-x64;%PATH%"
+   npx "--yes" "@vscode/vsce" "package" "--no-dependencies"
+   ```
+
    This downloads the packaging tool as needed, runs the extension's build automatically, and creates `copytextlocation-0.1.0.vsix` in the repository folder. The version in the filename follows `package.json`. Wait for the command to finish successfully before continuing. Internet access is needed to download the packaging tool; no separate `npm install` or `Run.cmd` step is required.
 
    On Windows, if PowerShell reports that `npx.ps1` cannot run because scripts are disabled, use this equivalent command:
