@@ -5,7 +5,7 @@ It adds these functions to the right-click context menu:
 * `Copy text and location`: Copy the exact text, file path, and location in file of the text.
 * `Copy location`: Copy the exact file path, and location in file of the text.
 
-The file path uses `\` on Windows and `/` on other OSes.
+The file path uses `\` on Windows and `/` on other OSes. Windows drive letters are uppercase, such as `C:\`, even though VS Code reports them in lowercase.
 
 The location in the file uses the format `startLine:startColumn-endLine:endColumn`, appended to the file path with a colon:
 
