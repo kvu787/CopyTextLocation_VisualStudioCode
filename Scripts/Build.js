@@ -10,9 +10,11 @@ assert.equal(entryPoint, path.join(root, 'Source', 'Extension.js'));
 new Script(fileSystem.readFileSync(entryPoint, 'utf8'), { filename: entryPoint });
 
 const output = path.join(root, 'Build', 'CopyTextLocation');
-fileSystem.mkdirSync(path.join(output, 'Source'), { recursive: true });
-// Copy only distributable files, never conversations, tests, or session logs.
-for (const file of ['package.json', 'Source/Extension.js', 'README.md', 'LICENSE']) {
-    fileSystem.copyFileSync(path.join(root, file), path.join(output, file));
+// Copy the same files the VSIX contains: vsce always packages package.json and README.md,
+// and the manifest's "files" allowlist names everything else.
+for (const file of ['package.json', 'README.md', ...manifest.files]) {
+    const destination = path.join(output, file);
+    fileSystem.mkdirSync(path.dirname(destination), { recursive: true });
+    fileSystem.copyFileSync(path.join(root, file), destination);
 }
 console.log(`Built extension: ${output}`);

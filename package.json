@@ -14,6 +14,7 @@
   },
   "categories": ["Other"],
   "main": "./Source/Extension.js",
+  "files": ["Source/Extension.js", "LICENSE"],
   "extensionKind": ["workspace"],
   "capabilities": {
     "untrustedWorkspaces": { "supported": true },

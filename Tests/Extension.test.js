@@ -80,6 +80,14 @@ test('registers both contributed commands and disposes them with the extension',
     assert.equal(state.commands.size, 0);
 });
 
+test('packages only the extension entry point, license, manifest, and README', () => {
+    const manifest = require('../package.json');
+    // vsce always adds package.json and README.md, and refuses to combine "files" with .vscodeignore.
+    assert.deepEqual(manifest.files, ['Source/Extension.js', 'LICENSE']);
+    assert.equal(path.resolve(__dirname, '..', manifest.main), path.resolve(__dirname, '..', manifest.files[0]));
+    assert.equal(fileSystem.existsSync(path.join(__dirname, '../.vscodeignore')), false);
+});
+
 test('copies the complete single-line payload, including triple-backtick fences, both endpoints, and trailing newlines', async () => {
     const state = activate();
     await state.execute();

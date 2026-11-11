@@ -89,6 +89,6 @@ Each launch writes its build output, test output, and VS Code logs under `MyLogO
 
 The extension is plain JavaScript with no runtime or development dependencies. With Node.js 20 or newer, run `node Scripts/Build.js` to build and `node --test Tests/Extension.test.js` to run unit tests on any operating system. The build is placed in `Build/CopyTextLocation/`.
 
-To run in a development window on macOS or Linux, launch `code --extensionDevelopmentPath="$PWD/Build/CopyTextLocation"` after building. To install into your usual VS Code profile, follow [Install into VS Code](#install-into-vs-code) above. The package excludes conversations, tests, scripts, and session logs.
+To run in a development window on macOS or Linux, launch `code --extensionDevelopmentPath="$PWD/Build/CopyTextLocation"` after building. To install into your usual VS Code profile, follow [Install into VS Code](#install-into-vs-code) above. The `files` list in `package.json` limits the package to `package.json`, `README.md`, `LICENSE`, and `Source/Extension.js`, so conversations, tests, scripts, session logs, and any other local folders are never included. The build copies the same files.
 
 The tests cover exact clipboard output, triple-backtick fences, trailing newlines, both endpoints, native paths, whitespace, Unicode, empty selections, unsupported documents, and clipboard failures. The VS Code integration checks exercise actual selections, clipboard writes, activation, unsaved edits, and selected Markdown containing code fences.
