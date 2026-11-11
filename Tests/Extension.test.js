@@ -9,7 +9,8 @@ const note = 'Lines and columns are 1-based. Columns are StartInclusive:EndExclu
 const textCommand = 'copyTextLocation.copyTextAndLocation';
 const locationCommand = 'copyTextLocation.copyLocation';
 
-function createEditor(text = 'Hello', filePath = 'C:\\Project\\Example.cs') {
+// VS Code's Uri.fsPath reports Windows drive letters in lowercase, so the default path does too.
+function createEditor(text = 'Hello', filePath = 'c:\\Project\\Example.cs') {
     const selection = {
         start: { line: 11, character: 4 },
         end: { line: 11, character: 9 },
@@ -117,6 +118,14 @@ for (const filePath of [
         assert.equal(state.clipboard, `\`\`\`\n${filePath}:12:5-12:10\n${note}\n\`\`\`\n`);
     });
 }
+
+test('uppercases a lowercase Windows drive letter and leaves the rest of the path unchanged', async () => {
+    const state = activate(createEditor('Hello', 'd:\\work\\example.cs'));
+    await state.execute();
+    assert.equal(state.clipboard, `\`\`\`\nD:\\work\\example.cs:12:5-12:10\n${note}\n\`\`\`\n\`\`\`\nHello\n\`\`\`\n`);
+    await state.execute(locationCommand);
+    assert.equal(state.clipboard, `\`\`\`\nD:\\work\\example.cs:12:5-12:10\n${note}\n\`\`\`\n`);
+});
 
 for (const selectedText of ['  \tHello  ', 'first\nsecond\n', 'first\r\nsecond\r\n', '\t😀e\u0301', '```\n<>&\\\n```', '\n', '````\n```\n````']) {
     test(`preserves the selection verbatim inside the text block: ${JSON.stringify(selectedText)}`, async () => {

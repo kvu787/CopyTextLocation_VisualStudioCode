@@ -22,7 +22,9 @@ async function copySelection(includeText) {
     // Selection.start/end are ordered even when the selection was made backwards.
     // VS Code already measures character offsets in UTF-16 code units.
     const { start, end } = selection;
-    const location = `${document.uri.fsPath}:${start.line + 1}:${start.character + 1}`
+    // VS Code reports Windows drive letters in lowercase (c:\...); copy the conventional C:\... form.
+    const filePath = document.uri.fsPath.replace(/^[a-z]:/, drive => drive.toUpperCase());
+    const location = `${filePath}:${start.line + 1}:${start.character + 1}`
         + `-${end.line + 1}:${end.character + 1}`;
     const note = 'Lines and columns are 1-based. Columns are StartInclusive:EndExclusive. Columns count UTF-16 code units.';
     // Preserve the selection verbatim inside its fence, then add LF and the closing fence.

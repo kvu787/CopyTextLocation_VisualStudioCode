@@ -14,12 +14,18 @@ async function run() {
     let count = 0;
 
     async function verifyClipboard(editor, range, selectedText) {
+        const fsPath = editor.document.uri.fsPath;
+        // VS Code reports Windows drive letters in lowercase; the extension copies them in uppercase.
+        const copiedPath = process.platform === 'win32' ? fsPath[0].toUpperCase() + fsPath.slice(1) : fsPath;
+        if (process.platform === 'win32') {
+            assert.match(copiedPath, /^[A-Z]:\\/);
+        }
         for (const command of commands) {
             await vscode.commands.executeCommand(command);
             const suffix = command === 'copyTextLocation.copyTextAndLocation'
                 ? `\`\`\`\n${selectedText}\n\`\`\`\n` : '';
             assert.equal(await vscode.env.clipboard.readText(),
-                `\`\`\`\n${editor.document.uri.fsPath}:${range}\n${note}\n\`\`\`\n${suffix}`);
+                `\`\`\`\n${copiedPath}:${range}\n${note}\n\`\`\`\n${suffix}`);
             count++;
         }
     }
